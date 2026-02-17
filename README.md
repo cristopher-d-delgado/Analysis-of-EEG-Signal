@@ -1,178 +1,264 @@
-# 🧠 EEG Condition Classification Pipeline  
-**Signal Processing + Feature Engineering + Classical Machine Learning**
-
-End-to-end machine learning pipeline for classifying experimental conditions from raw EEG recordings.
-
-This project demonstrates:
-
-- Raw signal ingestion and conditioning  
-- Preprocessing validation against reference data  
-- Feature engineering from nonstationary time-series signals  
-- Cross-validated model evaluation  
-- Reproducible ML workflow  
+# 🧠 Cross-Subject EEG Classification  
+## Eyes Open vs Eyes Closed Using Classical Machine Learning
 
 ---
 
-# 🚀 Objective
+## 📌 Objective
 
-Build a robust pipeline that:
+This project evaluates whether spectral EEG features can reliably distinguish between **Eyes Open (EO)** and **Eyes Closed (EC)** conditions across unseen subjects.
 
-1. Converts raw ADC EEG recordings into clean physiological signals  
-2. Extracts structured features from time-series data  
-3. Classifies experimental conditions using classical ML  
+The focus is on:
 
-The focus is on **signal-aware ML engineering**, not deep learning shortcuts.
+- Proper cross-subject validation  
+- Prevention of subject leakage  
+- Feature ablation analysis  
+- Physiologically interpretable modeling  
 
----
+Final performance:
 
-# 🏗️ Pipeline Architecture
-
----
-
-# 🔧 1. Signal Conditioning
-
-Raw EEG requires domain-aware preprocessing before ML.
-
-### Steps
-
-- ADC → microvolt scaling  
-- Trim to experiment window  
-- Bandpass filter (1–40 Hz)  
-- Preserve original reference configuration  
-
-Why this matters:
-
-- Removes non-neural artifacts  
-- Ensures physiological interpretability  
-- Produces reproducible inputs for modeling  
+> **Cross-subject ROC-AUC: 0.805**
 
 ---
 
-# ✅ 2. Validation Against Reference Pipeline
+## 🧠 Scientific Background
 
-Before modeling, preprocessing was validated against the dataset’s provided filtered signals.
+The Eyes Open vs Eyes Closed paradigm is a classical EEG condition contrast.  
+Eyes Closed is typically associated with:
 
-Validation metrics:
+- Increased alpha power (8–12 Hz)
+- Occipital dominance of alpha rhythms
+- Changes in spectral distribution
 
-- Pearson correlation  
-- Mean absolute difference  
-- Channel-wise gain factors  
+Alpha reactivity is one of the most robust phenomena in resting-state EEG research  
+(Berger, 1929; Barry et al., 2007).
 
-### Result
+Relevant literature:
 
-- High waveform correlation  
-- Constant amplitude scaling factor (~540×)  
-- Structural equivalence confirmed  
-
-This step ensures modeling is built on verified signal processing — not guesswork.
-
----
-
-# ✂️ 3. Epoching (Time-Series Segmentation)
-
-EEG is nonstationary.
-
-Continuous recordings are segmented into:
-
-- 2-second windows  
-- 1-second overlap  
-
-Benefits:
-
-- Increases training samples  
-- Improves stationarity  
-- Enables feature stability  
+- Berger, H. (1929). *Über das Elektrenkephalogramm des Menschen.*
+- Barry, R. J., Clarke, A. R., Johnstone, S. J., Magee, C. A., & Rushby, J. A. (2007). EEG differences between eyes-closed and eyes-open resting conditions. *Clinical Neurophysiology.*
+- Klimesch, W. (1999). EEG alpha and theta oscillations reflect cognitive and memory performance. *Brain Research Reviews.*
 
 ---
 
-# 📊 4. Feature Engineering
+## 📊 Dataset
 
-Each epoch is transformed into a structured feature vector.
+- **20 subjects**
+- Each subject performed:
+  - Eyes Open (EO)
+  - Eyes Closed (EC)
+- EEG segmented into epochs
+- Features extracted per channel per epoch
 
-### Frequency Features
-
-- Absolute band power (delta–gamma)
-- Relative band power
-
-### Time-Domain Features
-
-- Hjorth Activity  
-- Mobility  
-- Complexity  
-
-### Spectral Features
-
-- Spectral entropy  
-
-This transforms raw waveforms into interpretable statistical descriptors suitable for classical ML.
+This is explicitly treated as a **cross-subject classification problem**, not within-subject decoding.
 
 ---
 
-# 🤖 5. Modeling
+## ⚙️ Feature Engineering
 
-Pipeline:
+For each EEG channel:
 
-- `StandardScaler`
-- `RandomForestClassifier (n_estimators=200)`
-- Stratified 5-fold cross-validation  
+### Absolute Band Power
+- Delta (0.5–4 Hz)
+- Theta (4–8 Hz)
+- Alpha (8–12 Hz)
+- Beta (13–30 Hz)
 
-### Why Random Forest?
+### Relative Band Power
+\[
+\text{Relative Power} = \frac{\text{Band Power}}{\text{Total Power}}
+\]
 
-- Handles nonlinear relationships  
-- Robust to feature scaling differences  
-- Provides feature importance  
-- Strong baseline for structured tabular features  
+Absolute power captures global amplitude changes.  
+Relative power captures spectral redistribution.
 
----
+Both were retained to test complementary contributions.
 
-# 📈 Evaluation
+Band power features are widely used in EEG classification  
+(Bashivan et al., 2015; Lotte et al., 2018).
 
-Model performance is evaluated using:
+References:
 
-- Cross-validated accuracy  
-- Stratified folds  
-- Leakage-aware splitting  
-
-This ensures generalization performance reflects condition separability — not subject memorization.
-
----
-
-# 🧠 Engineering Highlights
-
-✔ Validated preprocessing against external reference  
-✔ Clean separation between signal processing and modeling  
-✔ Feature-based approach for interpretability  
-✔ Reproducible ML pipeline  
-✔ Modular code structure  
+- Bashivan, P., et al. (2015). Learning representations from EEG with deep recurrent-convolutional neural networks. *ICLR Workshop.*
+- Lotte, F., et al. (2018). A review of classification algorithms for EEG-based brain–computer interfaces. *Journal of Neural Engineering.*
 
 ---
 
-# 🛠 Tech Stack
+## 🧪 Preprocessing
 
-- Python  
-- NumPy  
-- SciPy  
-- Pandas  
-- scikit-learn  
-- Matplotlib  
+### Within-Subject Z-Score Normalization
+
+EEG amplitude varies significantly across individuals due to:
+
+- Skull conductivity differences
+- Electrode impedance
+- Head anatomy
+- Baseline neural variability
+
+To reduce inter-subject scaling effects:
+
+\[
+Z = \frac{X - \mu_{subject}}{\sigma_{subject}}
+\]
+
+Normalization was performed **within subject**, preserving condition differences while reducing baseline amplitude bias.
+
+This is critical for cross-subject generalization  
+(Jayaram et al., 2016).
+
+Reference:
+
+- Jayaram, V., et al. (2016). Transfer learning in brain–computer interfaces. *IEEE Computational Intelligence Magazine.*
 
 ---
 
-# 📁 Project Structure
+## 🔬 Validation Strategy
+
+### Grouped Cross-Validation
+
+To prevent subject leakage:
+
+- **GroupKFold (5-fold)**
+- Subject ID used as grouping variable
+- No subject appears in both training and testing sets
+
+This ensures true cross-subject evaluation.
+
+Subject leakage can artificially inflate EEG classification performance  
+(Varoquaux et al., 2017).
+
+Reference:
+
+- Varoquaux, G., et al. (2017). Assessing and tuning brain decoders: Cross-validation, caveats, and guidelines. *NeuroImage.*
 
 ---
 
-# 📌 Future Improvements
+## 🤖 Models Evaluated
 
-- Leave-One-Subject-Out validation  
-- Feature importance visualization  
-- Hyperparameter tuning (`GridSearchCV`)  
-- XGBoost comparison  
-- CNN-based time-series baseline  
+### Logistic Regression
+- Linear baseline
+- L2 regularization
+- `class_weight="balanced"`
+
+### Random Forest
+- Nonlinear ensemble model
+- 400+ trees
+- `class_weight="balanced"`
+
+Random Forest was selected due to:
+
+- Robustness to nonlinear interactions
+- Suitability for tabular spectral features
+- Stability with moderate sample sizes
 
 ---
+
+## 📈 Evaluation Metrics
+
+- Sensitivity (Recall for EC)
+- Specificity (Recall for EO)
+- ROC-AUC
+
+ROC-AUC is threshold-independent and appropriate for balanced binary classification.
+
+---
+
+## 🏆 Results
+
+### Best Model  
+**Random Forest + Absolute & Relative Features + Within-Subject Z-score**
+
+| Metric        | Score  |
+|--------------|--------|
+| Sensitivity  | 0.735  |
+| Specificity  | 0.753  |
+| ROC-AUC      | **0.805** |
+
+Performance reflects cross-subject generalization to unseen individuals.
+
+---
+
+## 🔎 Feature Ablation Study
+
+To evaluate feature contribution:
+
+| Feature Set        | ROC-AUC |
+|--------------------|----------|
+| All features       | 0.805    |
+| Relative-only      | 0.765    |
+
+Removing absolute power reduced performance (~0.04 AUC drop).
+
+### Interpretation
+
+- Absolute amplitude shifts contribute discriminative signal.
+- Relative spectral redistribution also contributes.
+- Nonlinear models leverage interactions between both feature types.
+
+This suggests EO vs EC differences include both:
+
+1. Global amplitude changes  
+2. Frequency distribution shifts  
+
+---
+
+## 🧠 Technical Insights
+
+- Cross-subject EEG classification is variance-limited with small cohorts.
+- Within-subject normalization substantially improves generalization.
+- Proper grouped cross-validation is critical.
+- Nonlinear models outperform linear baselines.
+- Absolute and relative band powers provide complementary information.
+
+With only 20 subjects, an AUC of 0.80 indicates robust condition separability.
+
+---
+
+## ⚠️ Limitations
+
+- Small subject cohort (n=20)
+- Limited to band power features
+- No connectivity or higher-order spectral metrics
+- No domain adaptation techniques applied
+
+---
+
+## 🚀 Future Directions
+
+- Gradient Boosting (e.g., HistGradientBoosting, XGBoost)
+- Alpha reactivity indices
+- Band ratios (alpha/beta, theta/alpha)
+- Spectral entropy
+- 1/f slope modeling
+- Larger cross-site dataset
+- Domain adaptation for subject-invariant representations
+
+---
+
+## 🛠️ Tech Stack
+
+- Python 3.x
+- NumPy
+- SciPy
+- scikit-learn
+- Matplotlib
+
+---
+
+## 📌 Conclusion
+
+This project demonstrates that interpretable spectral features combined with rigorous cross-subject validation can achieve reliable EEG condition decoding.
+
+The emphasis was on:
+
+- Methodological rigor  
+- Prevention of data leakage  
+- Physiological interpretability  
+- Robust generalization  
+
+Even with only 20 subjects, a cross-subject ROC-AUC of 0.80 was achieved using classical machine learning methods.
+
 
 # 👤 Author
 
-**Cristopher Delgado **  
+**Cristopher Delgado**  
 Data Scientist | Signal Processing | Biomedical AI
