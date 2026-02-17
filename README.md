@@ -47,9 +47,9 @@ Relevant literature:
   - Eyes Open (EO)
   - Eyes Closed (EC)
 - EEG segmented into epochs
-- Features extracted per channel per epoch
+- Band power features extracted per channel
 
-This is explicitly treated as a **cross-subject classification problem**, not within-subject decoding.
+This is explicitly treated as a **cross-subject classification problem**.
 
 ---
 
