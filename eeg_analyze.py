@@ -49,14 +49,25 @@ def compute_alpha_power(eeg_epochs, fs=200, alpha_band=(8,12)):
     return alpha_power
 
 def plot_alpha_distribution(alpha_eo, alpha_ec, save_path=None):
-    plt.figure(figsize=(6,4))
-    sns.kdeplot(alpha_eo, label="Eyes Open", fill=True)
-    sns.kdeplot(alpha_ec, label="Eyes Closed", fill=True)
-    plt.xlabel("Alpha Power (µV²)")
+    plt.figure(figsize=(6,4), facecolor='white')
+    
+    # Log transform for better visualization
+    alpha_eo_log = np.log10(alpha_eo)
+    alpha_ec_log = np.log10(alpha_ec)
+    # Plot KDEs with fill
+    sns.kdeplot(alpha_eo_log, label="Eyes Open", fill=True)
+    sns.kdeplot(alpha_ec_log, label="Eyes Closed", fill=True)
+    # Define upper x-limit based on 99th percentile of combined data
+    upper = np.percentile(
+        np.concatenate([alpha_eo, alpha_ec]), 99
+    )
+    #plt.xlim(0, upper)
+    plt.xlabel("Alpha Power log10(µV²)")
     plt.ylabel("Density")
     plt.title("Alpha Power Distribution")
-    plt.legend()
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper right')
     plt.tight_layout()
+    
     if save_path:
         plt.savefig(save_path)
     plt.show()
