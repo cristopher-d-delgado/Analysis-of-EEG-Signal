@@ -62,7 +62,28 @@ In resting-state, the alpha band (8 - 12 Hz) is the primary discriminative featu
 
 --- 
 
-## 
+## EEG Descriptors
+
+This will include:
+* Absolute band power
+* Relative band power
+* Hjorth Parameters
+* Spectral Entropy
+
+| Feature Type        | Question It Answers                              |
+| ------------------- | ------------------------------------------------ |
+| Absolute Band Power | How strong is oscillation X?                     |
+| Relative Band Power | What percentage of activity is oscillation X?    |
+| Hjorth Activity     | How large is the signal overall?                 |
+| Hjorth Mobility     | How fast is the signal changing?                 |
+| Hjorth Complexity   | How irregular is the waveform?                   |
+| Spectral Entropy    | How organized vs noisy is the frequency content? |
+
+All per channel 
+
+Nayak, C. S., & Anilkumar, A. C. (2019, March 24). EEG Normal Waveforms. Nih.gov; StatPearls Publishing. https://www.ncbi.nlm.nih.gov/books/NBK539805/
+Safi, M. S., & Safi, S. M. M. (2021). Early detection of Alzheimer’s disease from EEG signals using Hjorth parameters. Biomedical Signal Processing and Control, 65, 102338. https://doi.org/10.1016/j.bspc.2020.102338
+
 ---
 
 ## 📊 Dataset
@@ -89,9 +110,9 @@ For each EEG channel:
 - Beta (13–30 Hz)
 
 ### Relative Band Power
-\[
+```math
 \text{Relative Power} = \frac{\text{Band Power}}{\text{Total Power}}
-\]
+```
 
 Absolute power captures global amplitude changes.  
 Relative power captures spectral redistribution.
@@ -126,10 +147,9 @@ EEG amplitude varies significantly across individuals due to:
 - Baseline neural variability
 
 To reduce inter-subject scaling effects:
-
-\[
-Z = \frac{X - \mu_{subject}}{\sigma_{subject}}
-\]
+```math
+\text{Z} = \frac{X - \mu_{subject}}{\sigma_{subject}}
+```
 
 Normalization was performed **within subject**, preserving condition differences while reducing baseline amplitude bias.
 
@@ -146,7 +166,10 @@ Reference:
 
 ### Signal Similarity to Physionet 
 
-[eo_vs_ec_plot](figures/alpha_distribution.png)
+### Confirmation of Expected Eyes Open vs Eyes Closed
+
+
+![eo_vs_ec_plot](figures/alpha_distribution.png)
 
 ### Grouped Cross-Validation
 

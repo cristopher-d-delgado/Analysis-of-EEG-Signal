@@ -14,25 +14,25 @@ from sklearn.pipeline import Pipeline
 sns.set_theme(style="whitegrid")
 
 
-# ============================================================
-# 1️⃣ PSD Example Function
-# ============================================================
-def plot_psd_example(eeg_eo, eeg_ec, fs=200, save_path=None):
-    f_eo, psd_eo = welch(eeg_eo.mean(axis=0), fs=fs, nperseg=fs*2)
-    f_ec, psd_ec = welch(eeg_ec.mean(axis=0), fs=fs, nperseg=fs*2)
+# # ============================================================
+# # 1️⃣ PSD Example Function
+# # ============================================================
+# def plot_psd_example(eeg_eo, eeg_ec, fs=200, save_path=None):
+#     f_eo, psd_eo = welch(eeg_eo.mean(axis=0), fs=fs, nperseg=fs*2)
+#     f_ec, psd_ec = welch(eeg_ec.mean(axis=0), fs=fs, nperseg=fs*2)
     
-    plt.figure(figsize=(8,4))
-    plt.semilogy(f_eo, psd_eo, label="Eyes Open")
-    plt.semilogy(f_ec, psd_ec, label="Eyes Closed")
-    plt.xlim(0, 15)
-    plt.xlabel("Frequency (Hz)")
-    plt.ylabel("PSD (µV²/Hz)")
-    plt.title("PSD Example — Channel T7")
-    plt.legend()
-    plt.tight_layout()
-    if save_path:
-        plt.savefig(save_path)
-    plt.show()
+#     plt.figure(figsize=(8,4))
+#     plt.semilogy(f_eo, psd_eo, label="Eyes Open")
+#     plt.semilogy(f_ec, psd_ec, label="Eyes Closed")
+#     plt.xlim(0, 15)
+#     plt.xlabel("Frequency (Hz)")
+#     plt.ylabel("PSD (µV²/Hz)")
+#     plt.title("PSD Example — Channel T7")
+#     plt.legend()
+#     plt.tight_layout()
+#     if save_path:
+#         plt.savefig(save_path)
+#     plt.show()
 
 
 # ============================================================
@@ -101,45 +101,45 @@ def plot_mean_roc(y_true_folds, y_prob_folds, save_path=None):
     plt.show()
 
 
-# ============================================================
-# 4️⃣ Confusion Matrix
-# ============================================================
-def plot_confusion_matrix(y_true, y_pred, class_names=["Eyes Closed", "Eyes Open"], save_path=None):
-    """
-    Plot normalized confusion matrix with percentages.
-    Handles empty rows gracefully.
+# # ============================================================
+# # 4️⃣ Confusion Matrix
+# # ============================================================
+# def plot_confusion_matrix(y_true, y_pred, class_names=["Eyes Closed", "Eyes Open"], save_path=None):
+#     """
+#     Plot normalized confusion matrix with percentages.
+#     Handles empty rows gracefully.
     
-    Parameters
-    ----------
-    y_true : np.ndarray
-        True labels
-    y_pred : np.ndarray
-        Predicted labels
-    class_names : list of str
-        Names for the classes
-    save_path : str or None
-        Where to save the figure
-    """
-    cm = confusion_matrix(y_true, y_pred, labels=[0,1])
-    cm_norm = cm.astype('float')
+#     Parameters
+#     ----------
+#     y_true : np.ndarray
+#         True labels
+#     y_pred : np.ndarray
+#         Predicted labels
+#     class_names : list of str
+#         Names for the classes
+#     save_path : str or None
+#         Where to save the figure
+#     """
+#     cm = confusion_matrix(y_true, y_pred, labels=[0,1])
+#     cm_norm = cm.astype('float')
     
-    # Normalize each row by its sum; handle zero rows
-    row_sums = cm.sum(axis=1)[:, np.newaxis]
-    row_sums[row_sums == 0] = 1  # avoid division by zero
-    cm_norm /= row_sums
+#     # Normalize each row by its sum; handle zero rows
+#     row_sums = cm.sum(axis=1)[:, np.newaxis]
+#     row_sums[row_sums == 0] = 1  # avoid division by zero
+#     cm_norm /= row_sums
     
-    plt.figure(figsize=(5,5))
-    sns.heatmap(cm_norm, annot=True, fmt=".2f", cmap="Blues", cbar=False,
-                xticklabels=class_names, yticklabels=class_names)
+#     plt.figure(figsize=(5,5))
+#     sns.heatmap(cm_norm, annot=True, fmt=".2f", cmap="Blues", cbar=False,
+#                 xticklabels=class_names, yticklabels=class_names)
     
-    plt.xlabel("Predicted")
-    plt.ylabel("True")
-    plt.title("Normalized Confusion Matrix")
-    plt.tight_layout()
+#     plt.xlabel("Predicted")
+#     plt.ylabel("True")
+#     plt.title("Normalized Confusion Matrix")
+#     plt.tight_layout()
     
-    if save_path:
-        plt.savefig(save_path)
-    plt.show()
+#     if save_path:
+#         plt.savefig(save_path)
+#     plt.show()
 
 
 # ============================================================

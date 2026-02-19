@@ -321,7 +321,7 @@ def plot_eeg_signal(eeg, channel=0, window=None):
     plt.tight_layout()
     plt.show()
 
-def compare_with_reference(eeg, reference_file, channel=0, window=None, show_diff=True, show_corr=True, offset_gap=50):
+def compare_with_reference(eeg, reference_file, channel=0, window=None, show_diff=True, offset_gap=50, save_fig=False, save_dir=None):
     """
     Compare one EEG channel to PhysioNet filtered reference.
 
@@ -336,9 +336,7 @@ def compare_with_reference(eeg, reference_file, channel=0, window=None, show_dif
     window : int or None
         Number of samples to display
     show_diff : bool
-        Whether to show difference plot
-    show_corr : bool
-        Whether to compute and display correlation
+        Whether to show difference plot below the signals
     """
     # Define reference channel 
     df_ref = pd.read_csv(reference_file)
@@ -359,27 +357,46 @@ def compare_with_reference(eeg, reference_file, channel=0, window=None, show_dif
     # Apply vertical offset for plotting
     my_offset = my + offset_gap
 
-    plt.figure(figsize=(12,4))
-    plt.plot(my_offset, label=f"My Ch {ch_name} + {offset_gap} uV", alpha=0.7)
-    plt.plot(ref, label=f"Ref Ch {ch_name} uV", alpha=0.7)
-    plt.title(f"{ch_name} Comparison")
-    plt.xlabel("Sample")
-    plt.ylabel("Amplitude (µV)")
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
-
     if show_diff:
+        # Compute difference (my - ref)
         diff = my - ref
+        
+        # Create figure with 2 subplots: Signals on top, Difference below
+        fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(12,6), facecolor='white')
+        
+        # Plot Signals on top and Difference below
+        ax[0].plot(my_offset, label=f"Pipeline Output {ch_name} + {offset_gap} uV", alpha=0.7)
+        ax[0].plot(ref, label=f"Reference {ch_name} uV", alpha=0.7)
+        ax[0].set_xlabel("Sample")
+        ax[0].set_ylabel("Amplitude (µV)")
+        ax[0].set_title(f"{ch_name} Comparison with PhysioNet Reference")
+        ax[0].legend(bbox_to_anchor=(1, 1), loc='upper left')
+
+        ax[1].plot(diff)
+        ax[1].set_title(f"Difference: {ch_name} (My − Ref)")
+        ax[1].set_xlabel("Sample")
+        ax[1].set_ylabel("Amplitude Difference (µV)")
+
+        plt.tight_layout()
+
+        if save_fig:
+            assert save_dir is not None, "save_dir must be provided if save_fig is True"
+            fig.savefig(save_dir)
+            plt.show()
+        
+        if save_fig == False or save_fig: 
+            plt.show()
+        
+        print(f"{ch_name} max diff: {np.max(np.abs(diff)):.5f} µV | mean diff: {np.mean(diff):.5f} µV")
+    
+    if show_diff == False:
         plt.figure(figsize=(12,4))
-        plt.plot(diff)
-        plt.title(f"Difference: {ch_name} (My − Ref)")
+        plt.plot(my_offset, label=f"My Ch {ch_name} + {offset_gap} uV", alpha=0.7)
+        plt.plot(ref, label=f"Ref Ch {ch_name} uV", alpha=0.7)
+        plt.title(f"{ch_name} Comparison")
         plt.xlabel("Sample")
-        plt.ylabel("Amplitude Difference (µV)")
+        plt.ylabel("Amplitude (µV)")
+        plt.legend()
         plt.tight_layout()
         plt.show()
-        print(f"{ch_name} max diff: {np.max(np.abs(diff)):.5f} µV | mean diff: {np.mean(diff):.5f} µV")
-
-    if show_corr:
-        corr = np.corrcoef(my, ref)[0,1]
-        print(f"{ch_name} correlation: {corr:.6f}")
+    
