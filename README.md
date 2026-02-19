@@ -40,6 +40,31 @@ Relevant literature:
 
 ---
 
+## 🧠 Spectral Feature Rationale
+
+EEG signals reflect the signals reflect the summed postsynaptic potentials of large cortical neuron populations.
+Rather than analyzing raw voltage time series directly, this project analyzes the frequency-domain representation of EEG activity.
+
+Using spectral decomposition (via Fourier-based methods), the signal is seperated into canonical frequency bands. Each band is associated with distinct neurophysiological processes. 
+
+--- 
+
+## 📶 Canonical EEG Frequency Bands
+
+| Band  | Frequency Range | Description                              |
+|-------|-----------------|------------------------------------------|
+| Delta | 0.5 - 4 Hz      | Deep sleep, slow-wave activity           |
+| Theta | 4 - 8 Hz        | Drowsiness, memory processes             |
+| Alpha | 8 - 12 Hz       | Relaxed wakefulness, cortical inhibition |
+| Beta  | 13 - 30 Hz      | Active cognition, alertness              |
+
+In resting-state, the alpha band (8 - 12 Hz) is the primary discriminative feature between Eyes Closed (EC) and Eyes Open (EO).
+
+--- 
+
+## 
+---
+
 ## 📊 Dataset
 
 - **20 subjects**
@@ -76,6 +101,8 @@ Both were retained to test complementary contributions.
 Band power features are widely used in EEG classification  
 (Bashivan et al., 2015; Lotte et al., 2018).
 
+### Generate EEG Descriptors for Classical ML Learning
+
 References:
 
 - Bashivan, P., et al. (2015). Learning representations from EEG with deep recurrent-convolutional neural networks. *ICLR Workshop.*
@@ -84,6 +111,10 @@ References:
 ---
 
 ## 🧪 Preprocessing
+
+### Bandpass Filter 
+
+### Notch Filter 
 
 ### Within-Subject Z-Score Normalization
 
@@ -112,6 +143,10 @@ Reference:
 ---
 
 ## 🔬 Validation Strategy
+
+### Signal Similarity to Physionet 
+
+[eo_vs_ec_plot](figures/alpha_distribution.png)
 
 ### Grouped Cross-Validation
 
@@ -160,6 +195,8 @@ Random Forest was selected due to:
 
 ROC-AUC is threshold-independent and appropriate for balanced binary classification.
 
+![roc_curve_cv](figures/roc_curve.png)
+
 ---
 
 ## 🏆 Results
@@ -176,17 +213,6 @@ ROC-AUC is threshold-independent and appropriate for balanced binary classificat
 Performance reflects cross-subject generalization to unseen individuals.
 
 ---
-
-## 🔎 Feature Ablation Study
-
-To evaluate feature contribution:
-
-| Feature Set        | ROC-AUC |
-|--------------------|----------|
-| All features       | 0.805    |
-| Relative-only      | 0.765    |
-
-Removing absolute power reduced performance (~0.04 AUC drop).
 
 ### Interpretation
 
@@ -231,6 +257,7 @@ With only 20 subjects, an AUC of 0.80 indicates robust condition separability.
 - 1/f slope modeling
 - Larger cross-site dataset
 - Domain adaptation for subject-invariant representations
+- Deep Learning with Spectograms
 
 ---
 
