@@ -79,6 +79,7 @@ def get_trim_indices(trim_df, subject, experiment, session):
 def bandpass_1_40hz(eeg, fs=FS):
     """
     Apply 1st-order Butterworth bandpass filter (1–40 Hz).
+    Ensures we focus on the EEG frequency bands relevant to auditory evoked potentials.
 
     Matches the filtering described in the dataset README.
     """
