@@ -247,3 +247,172 @@ def evaluate_model_cv(X, y, groups, model_cls=LogisticRegression, model_kwargs=N
     print(f"Mean Specificity: {np.mean(specificities):.3f}")
     
     return trained_model, y_true_folds, y_prob_folds, auc_scores, sensitivities, specificities
+
+# ============================================================
+# Spectogram Functions
+# ============================================================
+# --- Spectrogram for individual channel ---
+from scipy.signal import spectrogram
+from scipy.ndimage import gaussian_filter, median_filter
+
+label = 15
+title = 20 
+ticks = 12
+FS = 200 
+
+# --- Spectrograms for all channels ---
+def plot_channel_spectrograms(eeg, channels = ["T7", "F8", "Cz", "P4"], fs=FS, smoothing=None, sigma=1.0, median_size=(3,3), save_fig=False, save_path=None):
+    """
+    Create a spectrogram for each EEG channel.
+
+    Parameters
+    ----------
+    eeg : np.ndarray
+        Preprocessed EEG data (samples x channels)
+    channels : list of str
+        List of channel names corresponding to the columns in `eeg`
+    fs : int
+        Sampling frequency in Hz
+    smoothing: str or None
+        Type of smoothing to apply to spectrograms ('gaussian', 'median', or None)
+    sigma: float
+        Standard deviation for Gaussian smoothing (if smoothing='gaussian')
+    median_size : tuple
+        Size of the kernel for median filtering (if smoothing='median')
+    
+    Returns
+    -------
+    Plot of spectrograms for each channel.
+    """
+    # Check number of channels matches expected
+    n_channels = eeg.shape[1]
+    assert n_channels == 4, "This layout assumes exactly 4 channels."
+
+    # Create a 2x2 grid of subplots
+    fig, axes = plt.subplots(2, 2, figsize=(12, 8), sharex=True, sharey=True)
+    axes = axes.flatten()
+
+    # First compute all spectrograms so we can normalize color scale
+    specs = []
+    for ch in range(n_channels):
+        f, t, Sxx = spectrogram(eeg[:, ch], fs=fs, nperseg=256, noverlap=128)
+        Sxx_db = 10 * np.log10(Sxx + 1e-12)  # Convert to dB
+        
+        # Apply optional smoothing
+        if smoothing == 'gaussian':
+            Sxx_db = gaussian_filter(Sxx_db, sigma=sigma)  # Smooth the spectrogram
+        elif smoothing == 'median':
+            Sxx_db = median_filter(Sxx_db, size=median_size)  # Apply median filter
+        elif smoothing is None:
+            Sxx_db = Sxx_db  # No smoothing
+        
+        specs.append((f, t, Sxx_db))
+
+    # Find global min/max for shared color scale
+    vmin = min(np.min(Sxx) for _, _, Sxx in specs)
+    vmax = max(np.max(Sxx) for _, _, Sxx in specs)
+
+    # Plot each channel's spectrogram
+    for ch, ax in enumerate(axes):
+        f, t, Sxx_db = specs[ch]
+        #Sxx_db = gaussian_filter(Sxx_db, sigma=1.0)  # Smooth the spectrogram
+        im = ax.pcolormesh(t, f, Sxx_db, shading='gouraud',
+                           vmin=vmin, vmax=vmax)
+
+        ax.set_title(f"{channels[ch]}", fontsize=label)
+        ax.set_ylim(0, 60)  # Focus on 0-60 Hz
+        
+        if ch % 2 == 0:
+            ax.set_ylabel("Frequency (Hz)", fontsize=label)
+        if ch >= 2:
+            ax.set_xlabel("Time (s)", fontsize=label)
+    
+    
+    # Leave space for colorbar on figure 
+    fig.subplots_adjust(right=0.88)
+
+    # Shared colorbar
+    cbar_ax = fig.add_axes([0.91, 0.15, 0.02, 0.7])  # [left, bottom, width, height]
+
+    cbar = fig.colorbar(im, ax=axes, orientation='vertical',
+                        fraction=0.02, pad=0.04, cax=cbar_ax)
+    cbar.set_label("Power (dB)", fontsize=label)
+
+    # Add Sup title
+    plt.suptitle("EEG Spectrograms (0-60 Hz)", fontsize=title)
+    plt.tick_params(axis='both', which='major', labelsize=ticks)
+    
+    # Save figure if requested
+    if save_fig and save_path is not None:
+        fig.savefig(save_path, dpi=600)
+    
+    plt.show()
+
+# --- Mean spectrogram across channels ---
+def plot_mean_spectrogram(eeg, fs, smoothing='gaussian', sigma=1, save_fig=False, save_path=None):
+    """
+    Compute and plot the mean spectrogram across all channels.
+
+    Parameters
+    ----------
+    eeg : np.ndarray
+        Preprocessed EEG data (samples x channels)
+    fs : int
+        Sampling frequency in Hz
+    smoothing: str or None
+        Type of smoothing to apply to spectrograms ('gaussian', 'median', or None)
+    sigma: float
+        Standard deviation for Gaussian smoothing (if smoothing='gaussian')
+    median_size : tuple
+        Size of the kernel for median filtering (if smoothing='median')
+    
+    """
+    channel_spectrograms = []
+
+    # Compute spectrogram per channel
+    for ch in range(eeg.shape[1]):
+        f, t, Sxx = spectrogram(
+            eeg[:, ch],
+            fs=fs,
+            nperseg=256,
+            noverlap=128
+        )
+        channel_spectrograms.append(Sxx)
+
+        # Apply smoothing per-channel
+    if smoothing == 'gaussian':
+        Sxx = gaussian_filter(Sxx, sigma=sigma)   # smooth in freq & time
+    elif smoothing == 'median':
+        Sxx = median_filter(Sxx, size=(3,3))     # adjust kernel as needed
+    elif smoothing is None:
+        Sxx = Sxx  # No smoothing
+
+        channel_spectrograms.append(Sxx)
+    
+    # Stack into 3D array: (channels, freqs, times)
+    Sxx_stack = np.stack(channel_spectrograms, axis=0)
+
+    # Average in linear power space
+    Sxx_mean = np.mean(Sxx_stack, axis=0)
+
+    # Convert to dB AFTER averaging
+    Sxx_mean_db = 10 * np.log10(Sxx_mean + 1e-12)
+
+    # Plot
+    fig = plt.figure(figsize=(10, 6))
+    im = plt.pcolormesh(t, f, Sxx_mean_db,
+                        shading='gouraud')
+
+    plt.ylim(0, 50)
+    plt.xlabel("Time (s)", fontsize=label)
+    plt.ylabel("Frequency (Hz)", fontsize=label)
+    plt.title("Mean Spectrogram Across Channels", fontsize=title)
+    plt.tick_params(axis='both', which='major', labelsize=ticks)
+
+    cbar = plt.colorbar(im)
+    cbar.set_label("Power (dB)", fontsize=label)
+
+    # Save figure if requested
+    if save_fig and save_path is not None:
+        fig.savefig(save_path, dpi=600)
+    plt.show()
