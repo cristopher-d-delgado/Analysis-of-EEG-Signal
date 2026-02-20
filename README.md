@@ -191,8 +191,9 @@ Reference:
 - 400+ trees
 - `class_weight="balanced"`
 
-Random Forest was selected due to:
-- Robustness to nonlinear interactions
+Logistic Regression was selected due to:
+- Robustness
+- Interpretability on feature importance directions
 - Suitability for tabular spectral features
 - Stability with moderate sample sizes
 
@@ -206,30 +207,34 @@ Random Forest was selected due to:
 
 ROC-AUC is threshold-independent and appropriate for balanced binary classification.
 
-![roc_curve_cv](figures/roc_curve.png)
-
 ---
 
 ## 🏆 Results
 
 ### Best Model  
-**Random Forest + Absolute & Relative Features + Within-Subject Z-score**
+**Logistic Regression + Absolute & Relative Features + Within-Subject Z-score**
+
+Cross-Validation Results:
 
 | Metric        | Score  |
-|--------------|--------|
-| Sensitivity  | 0.735  |
-| Specificity  | 0.753  |
-| ROC-AUC      | **0.805** |
+|--------------|---------|
+| Sensitivity  | 68%     |
+| Specificity  | 70%     |
+| ROC-AUC      | **0.76** |
+
+![roc_curve_cv](figures/roc_curve.png)
 
 Performance reflects cross-subject generalization to unseen individuals.
 
 ---
 
-### Feature Importan
+### Feature Importance
 Most informative features:
 - Absolute amplitude shifts contribute discriminative signal.
 - Relative spectral redistribution also contributes.
 - Nonlinear models leverage interactions between both feature types.
+
+![feature_importance_logreg](figures/feature_importance.png)
 
 This suggests EO vs EC differences include both:
 
