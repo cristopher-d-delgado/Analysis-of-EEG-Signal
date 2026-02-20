@@ -246,10 +246,10 @@ This suggests EO vs EC differences include both:
 - Cross-subject EEG classification is variance-limited with small cohorts.
 - Within-subject normalization substantially improves generalization.
 - Proper grouped cross-validation is critical.
-- Nonlinear models outperform linear baselines.
+- Nonlinear models outperform linear baselines however create an increased complexity of interpretation of features.
 - Absolute and relative band powers provide complementary information.
 
-With only 20 subjects, an AUC of 0.80 indicates robust condition separability.
+With only 20 subjects, an AUC of 0.76 indicates robust condition separability.
 
 ---
 
@@ -257,13 +257,42 @@ With only 20 subjects, an AUC of 0.80 indicates robust condition separability.
 - Small subject cohort (n=20)
 - Low amount of channels/electrodes for EEG
 - No additional external validation set
-
 ---
 
 ## 🚀 Future Directions
 - Gradient Boosting (e.g., HistGradientBoosting, XGBoost)
 - Deep Learning with Spectograms
 - Choose dataset with more electrodes involved
+
+### Deep Learning with Spectograms
+Spectrograms provide a time–frequency representation of EEG signals, transforming 1D time series data into 2D images.
+They are computed using short-time Fourier transforms (STFT), where signal power is decomposed across frequency bands over time.
+
+This allows models to capture:
+* Temporal dynamics
+* Frequency structure
+* Event-related changes
+* Nonlinear time–frequency interactions
+
+Spectrogram-based approaches are commonly used in:
+* Speech recognition
+* Audio classification
+* Seizure detection
+* Brain–computer interfaces
+  
+Spectograms are a common method in visuallzing signals. They can also be used for Deep Learning. 
+For example, Pouya Bashivan et al. (2015) demonstrated that deep recurrent-convolutional neural networks can learn representations directly from EEG spectral images.
+
+Additionally, Fabien Lotte et al. (2018) provide a comprehensive review of machine learning methods in EEG-based brain–computer interfaces, including time–frequency approaches.
+
+Below is an example Spectogram from this dataset 
+
+  ![spectogram](figures/mean_spectrogram_ex.png)
+
+Bashivan, P., Rish, I., Yeasin, M., & Codella, N. (2015). Learning representations from EEG with deep recurrent-convolutional neural networks. ICLR Workshop.
+
+Lotte, F., et al. (2018). A review of classification algorithms for EEG-based brain–computer interfaces. Journal of Neural Engineering.
+
 ---
 
 ## 🛠️ Tech Stack
@@ -286,4 +315,4 @@ The emphasis was on:
 - Physiological interpretability  
 - Robust generalization  
 
-Even with only 20 subjects, a cross-subject ROC-AUC of 0.80 was achieved using classical machine learning methods. More complex methods such as Deep Learning Network can potentially provide even better classfication results. 
+Even with only 20 subjects, a cross-subject ROC-AUC of 0.76 was achieved using classical machine learning methods. More complex methods such as Deep Learning Network can potentially provide even better classfication results. 

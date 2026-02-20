@@ -289,7 +289,7 @@ def plot_channel_spectrograms(eeg, channels = ["T7", "F8", "Cz", "P4"], fs=FS, s
     assert n_channels == 4, "This layout assumes exactly 4 channels."
 
     # Create a 2x2 grid of subplots
-    fig, axes = plt.subplots(2, 2, figsize=(12, 8), sharex=True, sharey=True)
+    fig, axes = plt.subplots(2, 2, figsize=(12, 6), sharex=True, sharey=True)
     axes = axes.flatten()
 
     # First compute all spectrograms so we can normalize color scale
@@ -344,7 +344,7 @@ def plot_channel_spectrograms(eeg, channels = ["T7", "F8", "Cz", "P4"], fs=FS, s
     
     # Save figure if requested
     if save_fig and save_path is not None:
-        fig.savefig(save_path, dpi=600)
+        fig.savefig(save_path)
     
     plt.show()
 
@@ -399,7 +399,7 @@ def plot_mean_spectrogram(eeg, fs, smoothing='gaussian', sigma=1, save_fig=False
     Sxx_mean_db = 10 * np.log10(Sxx_mean + 1e-12)
 
     # Plot
-    fig = plt.figure(figsize=(10, 6))
+    fig = plt.figure(figsize=(5, 3))
     im = plt.pcolormesh(t, f, Sxx_mean_db,
                         shading='gouraud')
 
@@ -412,7 +412,9 @@ def plot_mean_spectrogram(eeg, fs, smoothing='gaussian', sigma=1, save_fig=False
     cbar = plt.colorbar(im)
     cbar.set_label("Power (dB)", fontsize=label)
 
+    plt.tight_layout()
+    
     # Save figure if requested
     if save_fig and save_path is not None:
-        fig.savefig(save_path, dpi=600)
+        fig.savefig(save_path)
     plt.show()
