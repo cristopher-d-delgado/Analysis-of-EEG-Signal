@@ -1,55 +1,127 @@
+# 👤 Author
+
+### **Cristopher Delgado**  
+### Data Scientist | Biomedical Engineer | [Linkedin](www.linkedin.com/in/cristopher-d-delgado)
+---
+
 # 🧠 Cross-Subject EEG Classification  
 ## Eyes Open vs Eyes Closed Using Classical Machine Learning
-
 ---
 
 ## 📌 Objective
 
-This project evaluates whether spectral EEG features can reliably distinguish between **Eyes Open (EO)** and **Eyes Closed (EC)** conditions across unseen subjects.
+This project evaluates whether spectral EEG features can reliably distinguish between Eyes Open (EO) and Eyes Closed (EC) conditions across unseen subjects.
 
-The focus is on:
-
+The emphasis is on:
 - Proper cross-subject validation  
 - Prevention of subject leakage  
-- Feature ablation analysis  
 - Physiologically interpretable modeling  
 
 Final performance:
-
 > **Cross-subject ROC-AUC: 0.805**
 
 ---
 
 ## 🧠 Scientific Background
 
-The Eyes Open vs Eyes Closed paradigm is a classical EEG condition contrast.  
-Eyes Closed is typically associated with:
+The Eyes Open vs Eyes Closed paradigm is one of the most reproducible phenomena in EEG research.
 
-- Increased alpha power (8–12 Hz)
-- Occipital dominance of alpha rhythms
-- Changes in spectral distribution
+Eyes Closed is associated with:
 
-Alpha reactivity is one of the most robust phenomena in resting-state EEG research  
+Increased alpha power (8–12 Hz)
+
+Posterior-dominant rhythm
+
+Spectral redistribution toward lower frequencies
+
+Alpha reactivity was first described by Hans Berger and remains a cornerstone of resting-state electrophysiology.
 (Berger, 1929; Barry et al., 2007).
 
-Relevant literature:
-
+Further Characterization was provided by:
 - Berger, H. (1929). *Über das Elektrenkephalogramm des Menschen.*
 - Barry, R. J., Clarke, A. R., Johnstone, S. J., Magee, C. A., & Rushby, J. A. (2007). EEG differences between eyes-closed and eyes-open resting conditions. *Clinical Neurophysiology.*
 - Klimesch, W. (1999). EEG alpha and theta oscillations reflect cognitive and memory performance. *Brain Research Reviews.*
 
 ---
 
-## 🧠 Spectral Feature Rationale
+## 📊 Dataset
+EEG data was obtained from PhysioNet using recordings acquired with the OpenBCI 4-channel Ganglion board.
+* 20 Subjects
+* Each performed:
+  * Eyes Open (EO)
+  * Eyes Closed (EC)
+* Sampling Rate: 200 Hz
+* Channels: T7, F8, Cz, P4
+
+### Folder Structure
+| Folder         | Description                                                  |
+|----------------|--------------------------------------------------------------|
+| Filtered_Data  | Contains the Pre-processed EEG signal provided by PhysioNet. |
+| Raw_Data       | Contains ADC values.                                         |
+| Segmented_Data | Contains sample trim points of event related EEG.            |
+
+## Pre-processing Pipeline
+
+To ensure physiological validity and reproducibility, preprocessing replicated the PhysioNet pipeline.
+
+**1️⃣ ADC → Microvolt Conversion** 
+
+Using the [Open BCI Ganglion scale factor](https://docs.openbci.com/Ganglion/GanglionDataFormat/).  
+```math
+Scale Factor = 15686 uV / 8388607 = 0.001869917138805
+```
+Ensures physiological interpretability in uV.
+
+**2️⃣ Bandpass Filter (1-40 Hz)**
+
+Removes: 
+  - slow drift (<1 Hz)  
+  - High-frequency muscle artifacts (>40 Hz)  
+  - Preserves canonical EEG rhythms (delta–gamma)  
+
+**3️⃣ Notch Filter (50 Hz)**
+
+Removes power line interference. 
+
+**4️⃣ Within Subject Z-Score Normalization**
+```math
+\text{Z} = \frac{X - \mu_{subject}}{\sigma_{subject}}
+```
+
+Reduces inter-subject amplitude variance while preserving EO vs EC differences.
+
+This step is critical for cross-subject generalization (Jayaram et al., 2016).
+
+## Validation of Pre-processing
+### Correlation of Pipeline Pre-Processing vs PhysioNet
+
+| Channel | Correlation |
+|---------|-------------|
+| T7      | 0.89        |
+| F8      | 0.96        |
+| Cz      | 0.91        |
+| P4      | 0.91        |
+
+The reproduced pipelin closely matches PhysioNet reference signals
+
+#### Example Channel T7 Patient 1, Session 01
+![pipeline_preprocessing_plot](figures/pipeline_vs_reference.png)
+
+### Alpha Reactivity Confirmation 
+
+Alpha band (8-12 Hz) power increased during Eyes Closed recordings. This confirms physiological integrity of the pre-processing pipeline.
+
+![eo_vs_ec_alpha_dist](figures/alpha_distribution.png)
+
+## 📶 Feature Engineering
+### 🧠 Spectral Features
 
 EEG signals reflect the signals reflect the summed postsynaptic potentials of large cortical neuron populations.
 Rather than analyzing raw voltage time series directly, this project analyzes the frequency-domain representation of EEG activity.
 
 Using spectral decomposition (via Fourier-based methods), the signal is seperated into canonical frequency bands. Each band is associated with distinct neurophysiological processes. 
 
---- 
-
-## 📶 Canonical EEG Frequency Bands
+#### 📶 Canonical EEG Frequency Bands
 
 | Band  | Frequency Range | Description                              |
 |-------|-----------------|------------------------------------------|
@@ -60,15 +132,17 @@ Using spectral decomposition (via Fourier-based methods), the signal is seperate
 
 In resting-state, the alpha band (8 - 12 Hz) is the primary discriminative feature between Eyes Closed (EC) and Eyes Open (EO).
 
---- 
-
-## EEG Descriptors
+### Time-domain Descriptors
 
 This will include:
-* Absolute band power
-* Relative band power
 * Hjorth Parameters
-* Spectral Entropy
+  * Hjorth Activity
+  * Hjorth Mobility
+  * Hjorth Complexity
+
+### Spectral Entropy
+
+Measures frequency-domain organization vs randomness. 
 
 | Feature Type        | Question It Answers                              |
 | ------------------- | ------------------------------------------------ |
@@ -79,99 +153,14 @@ This will include:
 | Hjorth Complexity   | How irregular is the waveform?                   |
 | Spectral Entropy    | How organized vs noisy is the frequency content? |
 
-All per channel 
+Reference: 
 
-Nayak, C. S., & Anilkumar, A. C. (2019, March 24). EEG Normal Waveforms. Nih.gov; StatPearls Publishing. https://www.ncbi.nlm.nih.gov/books/NBK539805/
-Safi, M. S., & Safi, S. M. M. (2021). Early detection of Alzheimer’s disease from EEG signals using Hjorth parameters. Biomedical Signal Processing and Control, 65, 102338. https://doi.org/10.1016/j.bspc.2020.102338
-
----
-
-## 📊 Dataset
-
-- **20 subjects**
-- Each subject performed:
-  - Eyes Open (EO)
-  - Eyes Closed (EC)
-- EEG segmented into epochs
-- Band power features extracted per channel
-
-This is explicitly treated as a **cross-subject classification problem**.
+- Nayak, C. S., & Anilkumar, A. C. (2019, March 24). EEG Normal Waveforms. Nih.gov; StatPearls Publishing. https://www.ncbi.nlm.nih.gov/books/NBK539805/
+- Safi, M. S., & Safi, S. M. M. (2021). Early detection of Alzheimer’s disease from EEG signals using Hjorth parameters. Biomedical Signal Processing and Control, 65, 102338. https://doi.org/10.1016/j.bspc.2020.102338
 
 ---
 
-## ⚙️ Feature Engineering
-
-For each EEG channel:
-
-### Absolute Band Power
-- Delta (0.5–4 Hz)
-- Theta (4–8 Hz)
-- Alpha (8–12 Hz)
-- Beta (13–30 Hz)
-
-### Relative Band Power
-```math
-\text{Relative Power} = \frac{\text{Band Power}}{\text{Total Power}}
-```
-
-Absolute power captures global amplitude changes.  
-Relative power captures spectral redistribution.
-
-Both were retained to test complementary contributions.
-
-Band power features are widely used in EEG classification  
-(Bashivan et al., 2015; Lotte et al., 2018).
-
-### Generate EEG Descriptors for Classical ML Learning
-
-References:
-
-- Bashivan, P., et al. (2015). Learning representations from EEG with deep recurrent-convolutional neural networks. *ICLR Workshop.*
-- Lotte, F., et al. (2018). A review of classification algorithms for EEG-based brain–computer interfaces. *Journal of Neural Engineering.*
-
----
-
-## 🧪 Preprocessing
-
-### Bandpass Filter 
-
-### Notch Filter 
-
-### Within-Subject Z-Score Normalization
-
-EEG amplitude varies significantly across individuals due to:
-
-- Skull conductivity differences
-- Electrode impedance
-- Head anatomy
-- Baseline neural variability
-
-To reduce inter-subject scaling effects:
-```math
-\text{Z} = \frac{X - \mu_{subject}}{\sigma_{subject}}
-```
-
-Normalization was performed **within subject**, preserving condition differences while reducing baseline amplitude bias.
-
-This is critical for cross-subject generalization  
-(Jayaram et al., 2016).
-
-Reference:
-
-- Jayaram, V., et al. (2016). Transfer learning in brain–computer interfaces. *IEEE Computational Intelligence Magazine.*
-
----
-
-## 🔬 Validation Strategy
-
-### Signal Similarity to Physionet 
-
-### Confirmation of Expected Eyes Open vs Eyes Closed
-
-
-![eo_vs_ec_plot](figures/alpha_distribution.png)
-
-### Grouped Cross-Validation
+## Grouped Cross-Validation Strategy
 
 To prevent subject leakage:
 
@@ -203,7 +192,6 @@ Reference:
 - `class_weight="balanced"`
 
 Random Forest was selected due to:
-
 - Robustness to nonlinear interactions
 - Suitability for tabular spectral features
 - Stability with moderate sample sizes
@@ -237,8 +225,8 @@ Performance reflects cross-subject generalization to unseen individuals.
 
 ---
 
-### Interpretation
-
+### Feature Importan
+Most informative features:
 - Absolute amplitude shifts contribute discriminative signal.
 - Relative spectral redistribution also contributes.
 - Nonlinear models leverage interactions between both feature types.
@@ -263,30 +251,21 @@ With only 20 subjects, an AUC of 0.80 indicates robust condition separability.
 ---
 
 ## ⚠️ Limitations
-
 - Small subject cohort (n=20)
-- Limited to band power features
-- No connectivity or higher-order spectral metrics
-- No domain adaptation techniques applied
+- Low amount of channels/electrodes for EEG
+- No additional external validation set
 
 ---
 
 ## 🚀 Future Directions
-
 - Gradient Boosting (e.g., HistGradientBoosting, XGBoost)
-- Alpha reactivity indices
-- Band ratios (alpha/beta, theta/alpha)
-- Spectral entropy
-- 1/f slope modeling
-- Larger cross-site dataset
-- Domain adaptation for subject-invariant representations
 - Deep Learning with Spectograms
-
+- Choose dataset with more electrodes involved
 ---
 
 ## 🛠️ Tech Stack
 
-- Python 3.x
+- Python
 - NumPy
 - SciPy
 - scikit-learn
@@ -296,19 +275,12 @@ With only 20 subjects, an AUC of 0.80 indicates robust condition separability.
 
 ## 📌 Conclusion
 
-This project demonstrates that interpretable spectral features combined with rigorous cross-subject validation can achieve reliable EEG condition decoding.
+This project demonstrates that interpretable spectral features combined with rigorous cross-subject validation can achieve reliable EEG condition classification.
 
 The emphasis was on:
-
 - Methodological rigor  
 - Prevention of data leakage  
 - Physiological interpretability  
 - Robust generalization  
 
-Even with only 20 subjects, a cross-subject ROC-AUC of 0.80 was achieved using classical machine learning methods.
-
-
-# 👤 Author
-
-**Cristopher Delgado**  
-Data Scientist | Signal Processing | Biomedical AI
+Even with only 20 subjects, a cross-subject ROC-AUC of 0.80 was achieved using classical machine learning methods. More complex methods such as Deep Learning Network can potentially provide even better classfication results. 
