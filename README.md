@@ -222,8 +222,6 @@ Cross-Validation Results:
 | Specificity  | 70%     |
 | ROC-AUC      | **0.76** |
 
-![roc_curve_cv](figures/roc_curve.png)
-
 Performance reflects cross-subject generalization to unseen individuals.
 
 ---
@@ -234,7 +232,7 @@ Most informative features:
 - Relative spectral redistribution also contributes.
 - Nonlinear models leverage interactions between both feature types.
 
-![feature_importance_logreg](figures/feature_importance.png)
+![feature_importance_logreg](figures/logreg_feature_importance.png)
 
 This suggests EO vs EC differences include both:
 
