@@ -224,6 +224,7 @@ Cross-Validation Results:
 
 Performance reflects cross-subject generalization to unseen individuals.
 
+![cv_roc_logreg](figures/roc_curve.png)
 ---
 
 ### Feature Importance
